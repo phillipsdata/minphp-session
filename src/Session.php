@@ -47,7 +47,7 @@ class Session
         $supportedOptions = ['save_path', 'name', 'save_handler',
             'gc_probability', 'gc_divisor', 'gc_maxlifetime', 'serialize_handler',
             'cookie_lifetime', 'cookie_path', 'cookie_domain', 'cookie_secure',
-            'cookie_httponly', 'use_strict_mode', 'use_cooies', 'use_only_cookies',
+            'cookie_httponly', 'use_strict_mode', 'use_cookies', 'use_only_cookies',
             'referer_check', 'entropy_file', 'entropy_length', 'cache_limiter',
             'cache_expire', 'use_trans_sid', 'hash_function', 'hash_bits_per_character',
             'upload_progress.enabled', 'upload_progress.cleanup', 'upload_progress.prefix',
