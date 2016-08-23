@@ -81,7 +81,6 @@ class SessionTest extends PHPUnit_Framework_TestCase
         $lifetime = 100;
         $this->assertTrue($session->regenerate(false, $lifetime));
         $this->assertEquals($lifetime, ini_get('session.cookie_lifetime'));
-
     }
 
     /**
