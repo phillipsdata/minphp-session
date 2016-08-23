@@ -93,6 +93,8 @@ class PdoHandlerTest extends PHPUnit_Framework_TestCase
             $this->callback(function ($data) use ($sessionId) {
                 return $sessionId === $data[':id'];
             }),
+            null,
+            null,
             $this->returnValue((object)['value' => $returnVal])
         );
 
@@ -149,7 +151,7 @@ class PdoHandlerTest extends PHPUnit_Framework_TestCase
      *
      * @return PDO
      */
-    protected function getPdoMock($executeWith = null, $executeReturn = null, $rowCount = null)
+    protected function getPdoMock($executeWith = null, $executeReturn = null, $rowCount = null, $fetchValue = null)
     {
         $mockPdo = $this->getMockBuilder('\Minphp\Session\Tests\MockablePdo')
             ->getMock();
@@ -173,6 +175,12 @@ class PdoHandlerTest extends PHPUnit_Framework_TestCase
             $mockStatement->expects($this->once())
                 ->method('rowCount')
                 ->will($this->returnValue($rowCount));
+        }
+
+        if (null !== $fetchValue) {
+            $mockStatement->expects($this->any())
+                ->method('fetch')
+                ->will($fetchValue);
         }
 
         $mockPdo->expects($this->any())
