@@ -73,11 +73,13 @@ class PdoHandler implements SessionHandlerInterface
     {
         $query = "SELECT {$this->options['tbl_val']} FROM {$this->options['tbl']} "
             . "WHERE {$this->options['tbl_id']} = :id AND {$this->options['tbl_exp']} >= :expire";
-        $row = $this->db->prepare($query, [PDO::FETCH_OBJ])
-            ->execute([':id' => $sessionId, ':expire' => date('Y-m-d H:i:s')]);
 
-        if ($row) {
-            return $row->{$this->options['tbl_val']};
+        $row = $this->db->prepare($query);
+        $row->setFetchMode(PDO::FETCH_OBJ);
+        $row->execute([':id' => $sessionId, ':expire' => date('Y-m-d H:i:s')]);
+
+        if (($data = $row->fetch())) {
+            return $data->{$this->options['tbl_val']};
         }
         return null;
     }
