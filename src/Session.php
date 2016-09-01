@@ -97,6 +97,64 @@ class Session
     }
 
     /**
+     * Sets a client cookie. Defaults to use the PHP session cookie.
+     * Can be used to create specific cookies, keep them alive, or destroy them.
+     *
+     * @param string $name The name of the cookie to keep alive (if not the default one)
+     * @param int $lifetime The cookie time-to-live, in seconds, relative to the
+     *  current time (optional; 1 will remove the cookie, 0 will keep it until the browser is closed)
+     * @param string $path The cookie's path (optional)
+     * @param string $domain The cookie's domain (optional)
+     * @param bool $secure Whether to transmit the cookie securely from the client (optional)
+     * @param bool $httpOnly Whether the cookie is only accessible over the HTTP protocol (optional)
+     */
+    public function cookie(
+        $name = null,
+        $value = null,
+        $lifetime = null,
+        $path = null,
+        $domain = null,
+        $secure = null,
+        $httpOnly = null
+    ) {
+        // Determine the cookie lifetime relative to the current time
+        // where a lifetime of 1 is used to destroy the cookie
+        $prefix = 'session.';
+        $ttl = (int)ini_get($prefix . 'cookie_lifetime');
+        if ($lifetime === 0 || $lifetime === 1) {
+            // Use the given value as the lifetime
+        } elseif ($lifetime !== null) {
+            // Set a custom cookie lifetime
+            $ttl = time() + $lifetime;
+        } else {
+            // Set the default cookie lifetime
+            $ttl += time();
+        }
+
+        // Use the known session options for values not given
+        $cookie = array(
+            'name' => (null !== $name ? $name : ini_get($prefix . 'name')),
+            'value' => (null !== $value ? $value : $this->getId()),
+            'lifetime' => $ttl,
+            'path' => (null !== $path ? $path : ini_get($prefix . 'cookie_path')),
+            'domain' => (null !== $domain ? $domain : ini_get($prefix . 'cookie_domain')),
+            'secure' => (bool)(null !== $secure ? $secure : ini_get($prefix . 'cookie_secure')),
+            'httponly' => (bool)(null !== $httpOnly ? $httpOnly : ini_get($prefix . 'cookie_httponly'))
+        );
+
+        // Set the cookie for the client
+        setcookie(
+            $cookie['name'],
+            $cookie['value'],
+            $cookie['lifetime'],
+            $cookie['path'],
+            $cookie['domain'],
+            $cookie['secure'],
+            $cookie['httponly']
+        );
+    }
+
+    /**
      * Regenerates the session
      *
      * @param bool $destroy True to destroy the current session
