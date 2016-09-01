@@ -19,7 +19,8 @@ class PdoHandler implements SessionHandlerInterface
                 'tbl' => 'sessions',
                 'tbl_id' => 'id',
                 'tbl_exp' => 'expire',
-                'tbl_val' => 'value'
+                'tbl_val' => 'value',
+                'ttl' => 1800 // 30 mins
             ],
             $options
         );
@@ -89,11 +90,10 @@ class PdoHandler implements SessionHandlerInterface
      */
     public function write($sessionId, $data)
     {
-        $ttl = ini_get('session.gc_maxlifetime');
         $session = [
             ':value' => $data,
             ':id' => $sessionId,
-            ':expire' => date('Y-m-d H:i:s', time() + $ttl)
+            ':expire' => date('Y-m-d H:i:s', time() + (int)$this->options['ttl'])
         ];
 
         $updateQuery = "UPDATE {$this->options['tbl']} SET {$this->options['tbl_val']} = :value, "

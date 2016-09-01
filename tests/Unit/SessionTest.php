@@ -190,4 +190,15 @@ class SessionTest extends PHPUnit_Framework_TestCase
         $session->clear();
         $this->assertEmpty($_SESSION);
     }
+
+
+    /**
+     * @covers ::__construct
+     * @covers ::setOptions
+     * @covers ::cookie
+     */
+    public function testCookie()
+    {
+        $this->markTestSkipped('Cannot test whether a cookie was created.');
+    }
 }
