@@ -123,6 +123,7 @@ class Session
         $ttl = (int)ini_get($prefix . 'cookie_lifetime');
         if ($lifetime === 0 || $lifetime === 1) {
             // Use the given value as the lifetime
+            $ttl = $lifetime;
         } elseif ($lifetime !== null) {
             // Set a custom cookie lifetime
             $ttl = time() + $lifetime;
