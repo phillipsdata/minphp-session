@@ -172,7 +172,13 @@ class Session
             ini_set('session.cookie_lifetime', $lifetime);
         }
 
-        return session_regenerate_id($destroy);
+        $regenerated = session_regenerate_id($destroy);
+
+        // Close and restart the session
+		$this->save();
+		$this->start();
+
+        return $regenerated;
     }
 
     /**
