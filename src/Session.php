@@ -175,8 +175,8 @@ class Session
         $regenerated = session_regenerate_id($destroy);
 
         // Close and restart the session
-		$this->save();
-		$this->start();
+        $this->save();
+        $this->start();
 
         return $regenerated;
     }
