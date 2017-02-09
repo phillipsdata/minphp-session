@@ -80,9 +80,9 @@ class PdoHandler implements SessionHandlerInterface
         $row->execute([':id' => $sessionId, ':expire' => date('Y-m-d H:i:s')]);
 
         if (($data = $row->fetch())) {
-            return $data->{$this->options['tbl_val']};
+            return (string)$data->{$this->options['tbl_val']};
         }
-        return null;
+        return '';
     }
 
     /**

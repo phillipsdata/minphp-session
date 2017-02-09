@@ -84,22 +84,36 @@ class PdoHandlerTest extends PHPUnit_Framework_TestCase
     /**
      * @covers ::read
      * @covers ::__construct
+     * @dataProvider readProvider
+     *
+     * @param string $sessionId The session ID
+     * @param mixed $value The value returned from PDO
+     * @param string $expected The read value
      */
-    public function testRead()
+    public function testRead($sessionId, $value, $expected)
     {
-        $sessionId = 'sessionId';
-        $returnVal = 'value';
         $mockPdo = $this->getPdoMock(
             $this->callback(function ($data) use ($sessionId) {
                 return $sessionId === $data[':id'];
             }),
             null,
             null,
-            $this->returnValue((object)['value' => $returnVal])
+            $this->returnValue($value)
         );
 
         $handler = new PdoHandler($mockPdo);
-        $this->assertEquals($returnVal, $handler->read($sessionId));
+        $this->assertEquals($expected, $handler->read($sessionId));
+    }
+
+    /**
+     * Provides data for ::testRead
+     */
+    public function readProvider()
+    {
+        return [
+            ['sessionId', (object)['value' => 'value'], 'value'],
+            ['sessionId', false, '']
+        ];
     }
 
     /**
