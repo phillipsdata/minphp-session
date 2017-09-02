@@ -106,8 +106,14 @@ class PdoHandler implements SessionHandlerInterface
             // Session does not exist, so create it
             $insertQuery = "INSERT INTO {$this->options['tbl']} "
                 . "({$this->options['tbl_id']}, {$this->options['tbl_val']}, {$this->options['tbl_exp']}) "
-                . "VALUES (:id, :value, :expire)";
-            $this->db->prepare($insertQuery)->execute($session);
+                . "VALUES (:id, :value, :expire) "
+                . "ON DUPLICATE KEY UPDATE {$this->options['tbl_val']} = :new_value, "
+                . "{$this->options['tbl_exp']} = :new_expire";
+
+            $this->db->prepare($insertQuery)
+                ->execute(
+                    array_merge($session, [':new_value' => $session[':value'], ':new_expire' => $session[':expire']])
+                );
         }
         return true;
     }
