@@ -15,6 +15,7 @@ class Session
      */
     protected $handler;
     /**
+     * @deprecated since 1.2.0
      * @var bool Whether ot not the session has started
      */
     protected $started = false;
@@ -70,7 +71,6 @@ class Session
     public function start()
     {
         if (!$this->hasStarted()) {
-            $this->started = true;
             session_start();
         }
 
@@ -84,7 +84,7 @@ class Session
      */
     public function hasStarted()
     {
-        return $this->started;
+        return ($this->started = (session_status() === PHP_SESSION_ACTIVE));
     }
 
     /**
@@ -93,7 +93,6 @@ class Session
     public function save()
     {
         session_write_close();
-        $this->started = false;
     }
 
     /**
