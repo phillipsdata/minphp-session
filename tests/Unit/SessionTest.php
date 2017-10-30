@@ -37,6 +37,7 @@ class SessionTest extends PHPUnit_Framework_TestCase
      * @covers ::setOptions
      * @covers ::start
      * @covers ::hasStarted
+     * @covers ::save
      *
      * @runInSeparateProcess
      */
@@ -44,9 +45,13 @@ class SessionTest extends PHPUnit_Framework_TestCase
     {
         $session = new Session();
 
-        $this->assertFalse($session->hasStarted());
         $this->assertTrue($session->start());
         $this->assertTrue($session->hasStarted());
+
+        // Close the session
+        $session->save();
+
+        $this->assertFalse($session->hasStarted());
     }
 
     /**
@@ -76,6 +81,11 @@ class SessionTest extends PHPUnit_Framework_TestCase
     public function testRegenerate()
     {
         $session = new Session();
+
+        // Make sure the session is closed first
+        $session->save();
+
+        // Cannot regenerate with no active session
         $this->assertFalse($session->regenerate());
 
         $session->start();
@@ -191,7 +201,6 @@ class SessionTest extends PHPUnit_Framework_TestCase
         $session->clear();
         $this->assertEmpty($_SESSION);
     }
-
 
     /**
      * @covers ::__construct
