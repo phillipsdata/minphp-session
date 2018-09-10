@@ -24,12 +24,17 @@ class Session
      * Initialize the Session
      *
      * @param \SessionHandlerInterface $handler The session handler
+     * @param array $options Session ini options to set
+     * @see http://php.net/session.configuration
      */
     public function __construct(SessionHandlerInterface $handler = null, array $options = [])
     {
         session_register_shutdown();
 
-        $this->setOptions($options);
+        // We can only set the options if the session is not active
+        if (!$this->hasStarted()) {
+            $this->setOptions($options);
+        }
 
         if (!$this->handler) {
             $this->handler = $handler ?: new NativeHandler();
@@ -40,11 +45,16 @@ class Session
     /**
      * Sets session ini variables
      *
-     * @param array $options Options to set
+     * @param array $options Session ini options to set
      * @see http://php.net/session.configuration
+     * @throws \LogicException
      */
     public function setOptions(array $options)
     {
+        if ($this->hasStarted()) {
+            throw new LogicException('Session already started, can not set options.');
+        }
+
         $supportedOptions = ['save_path', 'name', 'save_handler',
             'gc_probability', 'gc_divisor', 'gc_maxlifetime', 'serialize_handler',
             'cookie_lifetime', 'cookie_path', 'cookie_domain', 'cookie_secure',
@@ -159,22 +169,27 @@ class Session
      *
      * @param bool $destroy True to destroy the current session
      * @param int $lifetime The lifetime of the session cookie in seconds
+     * @param array $options Session ini options to set
+     * @see http://php.net/session.configuration
      * @return bool True if regenerated, false otherwise
      */
-    public function regenerate($destroy = false, $lifetime = null)
+    public function regenerate($destroy = false, $lifetime = null, array $options = [])
     {
         if (!$this->hasStarted()) {
             return false;
         }
 
-        if (null !== $lifetime) {
-            ini_set('session.cookie_lifetime', $lifetime);
-        }
-
         $regenerated = session_regenerate_id($destroy);
 
-        // Close and restart the session
+        // Close and restart the session with the new options
         $this->save();
+
+        if ($lifetime !== null && !in_array('cookie_lifetime', $options)) {
+            $options['cookie_lifetime'] = $lifetime;
+        }
+
+        $this->setOptions($options);
+
         $this->start();
 
         return $regenerated;
@@ -218,6 +233,7 @@ class Session
      * Sets the session name
      *
      * @param string $name The session name
+     * @throws \LogicException
      */
     public function setName($name)
     {
