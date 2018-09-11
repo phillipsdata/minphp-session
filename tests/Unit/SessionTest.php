@@ -26,11 +26,17 @@ class SessionTest extends PHPUnit_Framework_TestCase
      * @covers ::__construct
      * @covers ::setOptions
      * @covers ::hasStarted
+     * @covers ::start
      *
      * @runInSeparateProcess
      */
     public function testConstructWithOptions()
     {
+        // Ensure the session is closed before beginning this test
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+
         $options = [
             'name' => 'my-session-name'
         ];
@@ -38,6 +44,7 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
         $this->assertInstanceOf('\Minphp\Session\Session', $session);
 
+        $session->start();
         $this->assertEquals($options['name'], ini_get('session.name'));
     }
 
