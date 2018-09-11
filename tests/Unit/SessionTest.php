@@ -13,22 +13,21 @@ class SessionTest extends PHPUnit_Framework_TestCase
      * @covers ::__construct
      * @covers ::setOptions
      * @covers ::hasStarted
-     * @covers ::save
+     *
+     * @runInSeparateProcess
      */
     public function testConstruct()
     {
         $session = new Session();
         $this->assertInstanceOf('\Minphp\Session\Session', $session);
-
-        // Clear the session so it does not affect other tests
-        $session->save();
     }
 
     /**
      * @covers ::__construct
      * @covers ::setOptions
      * @covers ::hasStarted
-     * @covers ::save
+     *
+     * @runInSeparateProcess
      */
     public function testConstructWithOptions()
     {
@@ -40,9 +39,6 @@ class SessionTest extends PHPUnit_Framework_TestCase
         $this->assertInstanceOf('\Minphp\Session\Session', $session);
 
         $this->assertEquals($options['name'], ini_get('session.name'));
-
-        // Clear the session so it does not affect other tests
-        $session->save();
     }
 
     /**
@@ -72,6 +68,8 @@ class SessionTest extends PHPUnit_Framework_TestCase
      * @covers ::setOptions
      * @covers ::save
      * @covers ::hasStarted
+     *
+     * @runInSeparateProcess
      */
     public function testSave()
     {
@@ -134,15 +132,25 @@ class SessionTest extends PHPUnit_Framework_TestCase
      * @covers ::setOptions
      * @covers ::getId
      * @covers ::setId
+     * @covers ::start
+     * @covers ::save
      * @covers ::hasStarted
+     *
+     * @runInSeparateProcess
      */
     public function testId()
     {
         $sessionId = 'sessionId';
         $session = new Session();
-        $this->assertNotNull($session->getId());
 
+        // The default session ID should be available
+        $session->start();
+        $this->assertNotNull($session->getId());
+        $session->save();
+
+        // The session ID should change
         $session->setId($sessionId);
+        $session->start();
         $this->assertEquals($sessionId, $session->getId());
     }
 
@@ -168,15 +176,25 @@ class SessionTest extends PHPUnit_Framework_TestCase
      * @covers ::setOptions
      * @covers ::getName
      * @covers ::setName
+     * @covers ::start
+     * @covers ::save
      * @covers ::hasStarted
+     *
+     * @runInSeparateProcess
      */
     public function testName()
     {
         $sessionName = 'sessionName';
         $session = new Session();
-        $this->assertNotNull($session->getName());
 
+        // The default session name should be available
+        $session->start();
+        $this->assertNotNull($session->getName());
+        $session->save();
+
+        // The session name should change
         $session->setName($sessionName);
+        $session->start();
         $this->assertEquals($sessionName, $session->getName());
     }
 
@@ -202,7 +220,10 @@ class SessionTest extends PHPUnit_Framework_TestCase
      * @covers ::setOptions
      * @covers ::read
      * @covers ::write
+     * @covers ::start
      * @covers ::hasStarted
+     *
+     * @runInSeparateProcess
      */
     public function testReadWrite()
     {
@@ -210,6 +231,7 @@ class SessionTest extends PHPUnit_Framework_TestCase
         $value = 'something';
 
         $session = new Session();
+        $session->start();
         $this->assertEquals('', $session->read($key));
         $session->write($key, $value);
         $this->assertEquals($value, $session->read($key));
@@ -221,11 +243,15 @@ class SessionTest extends PHPUnit_Framework_TestCase
      * @covers ::read
      * @covers ::write
      * @covers ::clear
+     * @covers ::start
      * @covers ::hasStarted
+     *
+     * @runInSeparateProcess
      */
     public function testClear()
     {
         $session = new Session();
+        $session->start();
         $session->write('key1', 'value1');
         $session->write('key2', 'value2');
         $session->write('key3', 'value3');
