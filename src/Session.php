@@ -142,7 +142,7 @@ class Session
         }
 
         // Use the known session options for values not given
-        $cookie = array(
+        $cookie = [
             'name' => (null !== $name ? $name : ini_get($prefix . 'name')),
             'value' => (null !== $value ? $value : $this->getId()),
             'lifetime' => $ttl,
@@ -150,7 +150,7 @@ class Session
             'domain' => (null !== $domain ? $domain : ini_get($prefix . 'cookie_domain')),
             'secure' => (bool)(null !== $secure ? $secure : ini_get($prefix . 'cookie_secure')),
             'httponly' => (bool)(null !== $httpOnly ? $httpOnly : ini_get($prefix . 'cookie_httponly'))
-        );
+        ];
 
         // Set the cookie for the client
         setcookie(

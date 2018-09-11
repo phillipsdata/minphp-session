@@ -12,24 +12,37 @@ class SessionTest extends PHPUnit_Framework_TestCase
     /**
      * @covers ::__construct
      * @covers ::setOptions
+     * @covers ::hasStarted
+     * @covers ::save
      */
     public function testConstruct()
     {
-        $this->assertInstanceOf('\Minphp\Session\Session', new Session());
+        $session = new Session();
+        $this->assertInstanceOf('\Minphp\Session\Session', $session);
+
+        // Clear the session so it does not affect other tests
+        $session->save();
     }
 
     /**
      * @covers ::__construct
      * @covers ::setOptions
+     * @covers ::hasStarted
+     * @covers ::save
      */
     public function testConstructWithOptions()
     {
         $options = [
             'name' => 'my-session-name'
         ];
-        $this->assertInstanceOf('\Minphp\Session\Session', new Session(null, $options));
+        $session = new Session(null, $options);
+
+        $this->assertInstanceOf('\Minphp\Session\Session', $session);
 
         $this->assertEquals($options['name'], ini_get('session.name'));
+
+        // Clear the session so it does not affect other tests
+        $session->save();
     }
 
     /**
@@ -66,6 +79,28 @@ class SessionTest extends PHPUnit_Framework_TestCase
         $session->save();
 
         $this->assertFalse($session->hasStarted());
+    }
+
+    /**
+     * @covers ::__construct
+     * @covers ::setOptions
+     * @covers ::start
+     * @covers ::hasStarted
+     * @expectedException \LogicException
+     *
+     * @runInSeparateProcess
+     */
+    public function testSetOptionsException()
+    {
+        // Start the session
+        $session = new Session();
+        $session->start();
+
+        // Setting options after the session has been started throws an exception
+        $options = [
+            'name' => 'my-session-name'
+        ];
+        $session->setOptions($options);
     }
 
     /**
@@ -167,6 +202,7 @@ class SessionTest extends PHPUnit_Framework_TestCase
      * @covers ::setOptions
      * @covers ::read
      * @covers ::write
+     * @covers ::hasStarted
      */
     public function testReadWrite()
     {
@@ -185,6 +221,7 @@ class SessionTest extends PHPUnit_Framework_TestCase
      * @covers ::read
      * @covers ::write
      * @covers ::clear
+     * @covers ::hasStarted
      */
     public function testClear()
     {
