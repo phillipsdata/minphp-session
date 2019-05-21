@@ -16,7 +16,7 @@ class Session
     protected $handler;
     /**
      * @deprecated since 1.2.0
-     * @var bool Whether ot not the session has started
+     * @var bool Whether or not the session has started
      */
     protected $started = false;
 
@@ -31,14 +31,17 @@ class Session
     {
         session_register_shutdown();
 
-        // We can only set the options if the session is not active
-        if (!$this->hasStarted()) {
-            $this->setOptions($options);
-        }
+        // The headers must not have already been sent
+        if (!$this->hasSentHeaders()) {
+            // We can only set the options if the session is not active
+            if (!$this->hasStarted()) {
+                $this->setOptions($options);
+            }
 
-        if (!$this->handler) {
-            $this->handler = $handler ?: new NativeHandler();
-            session_set_save_handler($this->handler, false);
+            if (!$this->handler) {
+                $this->handler = $handler ?: new NativeHandler();
+                session_set_save_handler($this->handler, false);
+            }
         }
     }
 
@@ -53,6 +56,10 @@ class Session
     {
         if ($this->hasStarted()) {
             throw new LogicException('Session already started, can not set options.');
+        }
+
+        if ($this->hasSentHeaders()) {
+            throw new LogicException('Headers already sent, can not set session options.');
         }
 
         $supportedOptions = ['save_path', 'name', 'save_handler',
@@ -81,7 +88,11 @@ class Session
     public function start()
     {
         if (!$this->hasStarted()) {
-            session_start();
+            if (!$this->hasSentHeaders()) {
+                return session_start();
+            }
+
+            return false;
         }
 
         return true;
@@ -95,6 +106,16 @@ class Session
     public function hasStarted()
     {
         return ($this->started = (session_status() === PHP_SESSION_ACTIVE));
+    }
+
+    /**
+     * Return whether any session headers have been sent/output or not
+     *
+     * @return bool True if session headers have already been sent
+     */
+    public function hasSentHeaders()
+    {
+        return headers_sent();
     }
 
     /**
@@ -175,7 +196,7 @@ class Session
      */
     public function regenerate($destroy = false, $lifetime = null, array $options = [])
     {
-        if (!$this->hasStarted()) {
+        if (!$this->hasStarted() || $this->hasSentHeaders()) {
             return false;
         }
 
