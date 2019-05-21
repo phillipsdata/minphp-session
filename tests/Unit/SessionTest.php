@@ -72,6 +72,26 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
     /**
      * @covers ::__construct
+     * @covers ::hasSentHeaders
+     * @covers ::start
+     * @covers ::hasStarted
+     * @covers ::save
+     *
+     * // Do not run this test in a separate process so that the headers are already sent
+     */
+    public function testStartHeadersSent()
+    {
+        $session = new Session();
+
+        // Close the open session
+        $session->save();
+
+        // The headers are already sent since this test is not run in a separate process
+        $this->assertFalse($session->start());
+    }
+
+    /**
+     * @covers ::__construct
      * @covers ::setOptions
      * @covers ::save
      * @covers ::hasStarted
@@ -106,6 +126,28 @@ class SessionTest extends PHPUnit_Framework_TestCase
             'name' => 'my-session-name'
         ];
         $session->setOptions($options);
+    }
+
+    /**
+     * @covers ::__construct
+     * @covers ::hasSentHeaders
+     * @covers ::save
+     * @covers ::hasStarted
+     * @covers ::setOptions
+     * @expectedException \LogicException
+     *
+     * // Do not run this test in a separate process so that the headers are already sent
+     */
+    public function testSetOptionsHeadersSentException()
+    {
+        // Start the session
+        $session = new Session();
+
+        // Make sure the session is closed first
+        $session->save();
+
+        // Set the options, which will fail due to the exception
+        $session->setOptions(['name' => 'abc123']);
     }
 
     /**

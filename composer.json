@@ -21,7 +21,7 @@
         "php": ">=5.4.0",
         "phpunit/phpunit": "~4.0",
         "squizlabs/php_codesniffer": "~2.2",
-        "satooshi/php-coveralls": "~1.0"
+        "php-coveralls/php-coveralls": "~1.1"
     },
     "autoload": {
         "psr-4": {"Minphp\\Session\\": "src"}
