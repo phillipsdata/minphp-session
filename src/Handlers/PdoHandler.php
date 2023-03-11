@@ -30,6 +30,7 @@ class PdoHandler implements SessionHandlerInterface
     /**
      * {@inheritdoc}
      */
+    #[\ReturnTypeWillChange]
     public function close()
     {
         return true;
@@ -38,6 +39,7 @@ class PdoHandler implements SessionHandlerInterface
     /**
      * {@inheritdoc}
      */
+    #[\ReturnTypeWillChange]
     public function destroy($sessionId)
     {
         $query = "DELETE FROM {$this->options['tbl']} WHERE {$this->options['tbl_id']} = :id";
@@ -50,6 +52,7 @@ class PdoHandler implements SessionHandlerInterface
     /**
      * {@inheritdoc}
      */
+    #[\ReturnTypeWillChange]
     public function gc($maxlifetime)
     {
         $query = "DELETE FROM {$this->options['tbl']} WHERE {$this->options['tbl_exp']} < :expire";
@@ -62,6 +65,7 @@ class PdoHandler implements SessionHandlerInterface
     /**
      * {@inheritdoc}
      */
+    #[\ReturnTypeWillChange]
     public function open($savePath, $name)
     {
         return true;
@@ -70,6 +74,7 @@ class PdoHandler implements SessionHandlerInterface
     /**
      * {@inheritdoc}
      */
+    #[\ReturnTypeWillChange]
     public function read($sessionId)
     {
         $query = "SELECT {$this->options['tbl_val']} FROM {$this->options['tbl']} "
@@ -88,6 +93,7 @@ class PdoHandler implements SessionHandlerInterface
     /**
      * {@inheritdoc}
      */
+    #[\ReturnTypeWillChange]
     public function write($sessionId, $data)
     {
         $session = [
