@@ -318,9 +318,150 @@ class SessionTest extends PHPUnit_Framework_TestCase
      * @covers ::__construct
      * @covers ::setOptions
      * @covers ::cookie
+     *
+     * @runInSeparateProcess
      */
     public function testCookie()
     {
-        $this->markTestSkipped('Cannot test whether a cookie was created.');
+        $session = new Session(null, ['cookie_samesite' => '']);
+        $session->cookie('my-cookie', 'my-value', 0, '/path', 'example.com', false, true);
+
+        $header = $this->getCookieHeader('my-cookie');
+        $this->assertContains('my-cookie=my-value', $header);
+        $this->assertContains('path=/path', $header);
+        $this->assertContains('domain=example.com', $header);
+        $this->assertContains('HttpOnly', $header);
+        $this->assertNotContains('secure', $header);
+        $this->assertNotContains('SameSite', $header);
+    }
+
+    /**
+     * @covers ::__construct
+     * @covers ::setOptions
+     * @covers ::cookie
+     *
+     * @runInSeparateProcess
+     */
+    public function testCookieSameSite()
+    {
+        $session = new Session(null, ['cookie_samesite' => 'Lax']);
+        $session->cookie('my-cookie', 'my-value', 0, '/', '', false, true);
+
+        $header = $this->getCookieHeader('my-cookie');
+        $this->assertContains('SameSite=Lax', $header);
+        $this->assertNotContains('secure', $header);
+    }
+
+    /**
+     * @covers ::__construct
+     * @covers ::setOptions
+     * @covers ::cookie
+     *
+     * @runInSeparateProcess
+     */
+    public function testCookieSameSiteNoneForcesSecure()
+    {
+        $session = new Session(null, ['cookie_samesite' => 'None']);
+        $session->cookie('my-cookie', 'my-value', 0, '/', '', false, true);
+
+        $header = $this->getCookieHeader('my-cookie');
+        $this->assertContains('SameSite=None', $header);
+        $this->assertContains('secure', $header);
+    }
+
+    /**
+     * Retrieves the Set-Cookie header sent for the given cookie
+     *
+     * @param string $name The name of the cookie
+     * @return string The Set-Cookie header
+     */
+    private function getCookieHeader($name)
+    {
+        if (!function_exists('xdebug_get_headers')) {
+            $this->markTestSkipped('Xdebug is required to inspect sent cookies.');
+        }
+
+        foreach (xdebug_get_headers() as $header) {
+            if (stripos($header, 'Set-Cookie: ' . $name . '=') === 0) {
+                return $header;
+            }
+        }
+
+        $this->fail('The ' . $name . ' cookie was not sent.');
+    }
+
+    /**
+     * @covers ::__construct
+     * @covers ::setOptions
+     * @covers ::isSecureRequest
+     *
+     * @runInSeparateProcess
+     */
+    public function testConstructSecureRequestSetsSameSiteNone()
+    {
+        $_SERVER['HTTPS'] = 'on';
+        ini_set('session.cookie_samesite', '');
+        new Session();
+
+        $this->assertEquals('None', ini_get('session.cookie_samesite'));
+        $this->assertEquals('1', ini_get('session.cookie_secure'));
+    }
+
+    /**
+     * @covers ::__construct
+     * @covers ::setOptions
+     *
+     * @runInSeparateProcess
+     */
+    public function testConstructSecureRequestKeepsGivenSameSite()
+    {
+        $_SERVER['HTTPS'] = 'on';
+        new Session(null, ['cookie_samesite' => 'Lax']);
+
+        $this->assertEquals('Lax', ini_get('session.cookie_samesite'));
+    }
+
+    /**
+     * @covers ::__construct
+     * @covers ::setOptions
+     * @covers ::isSecureRequest
+     *
+     * @runInSeparateProcess
+     */
+    public function testConstructSecureRequestKeepsIniSameSite()
+    {
+        $_SERVER['HTTPS'] = 'on';
+        ini_set('session.cookie_samesite', 'Strict');
+        new Session();
+
+        $this->assertEquals('Strict', ini_get('session.cookie_samesite'));
+    }
+
+    /**
+     * @covers ::__construct
+     * @covers ::isSecureRequest
+     *
+     * @runInSeparateProcess
+     */
+    public function testConstructInsecureRequestLeavesSameSite()
+    {
+        unset($_SERVER['HTTPS']);
+        $samesite = ini_get('session.cookie_samesite');
+        new Session();
+
+        $this->assertEquals($samesite, ini_get('session.cookie_samesite'));
+    }
+
+    /**
+     * @covers ::setOptions
+     *
+     * @runInSeparateProcess
+     */
+    public function testSetOptionsSameSiteNoneForcesSecure()
+    {
+        $session = new Session();
+        $session->setOptions(['cookie_samesite' => 'None', 'cookie_secure' => false]);
+
+        $this->assertEquals('1', ini_get('session.cookie_secure'));
     }
 }

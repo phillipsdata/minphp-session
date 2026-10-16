@@ -35,6 +35,16 @@ class Session
         if (!$this->hasSentHeaders()) {
             // We can only set the options if the session is not active
             if (!$this->hasStarted()) {
+                // Allow the session cookie on cross-site requests (e.g. off-site payment returns) over HTTPS
+                // unless a SameSite policy was given or already configured in php.ini
+                if (PHP_VERSION_ID >= 70300
+                    && $this->isSecureRequest()
+                    && !isset($options['cookie_samesite'])
+                    && (string)ini_get('session.cookie_samesite') === ''
+                ) {
+                    $options += ['cookie_samesite' => 'None', 'cookie_secure' => true];
+                }
+
                 $this->setOptions($options);
             }
 
@@ -70,7 +80,7 @@ class Session
             'cache_expire', 'use_trans_sid', 'hash_function', 'hash_bits_per_character',
             'upload_progress.enabled', 'upload_progress.cleanup', 'upload_progress.prefix',
             'upload_progress.name', 'upload_progress.freq', 'upload_progress.min_freq',
-            'lazy_write'
+            'lazy_write', 'cookie_samesite'
         ];
 
         foreach ($options as $key => $value) {
@@ -78,6 +88,21 @@ class Session
                 ini_set('session.' . $key, $value);
             }
         }
+
+        // Browsers reject SameSite=None cookies that are not secure
+        if (strcasecmp((string)ini_get('session.cookie_samesite'), 'None') === 0) {
+            ini_set('session.cookie_secure', true);
+        }
+    }
+
+    /**
+     * Return whether the current request was made over HTTPS
+     *
+     * @return bool True if the request is secure
+     */
+    protected function isSecureRequest()
+    {
+        return !empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off';
     }
 
     /**
@@ -173,7 +198,25 @@ class Session
             'httponly' => (bool)(null !== $httpOnly ? $httpOnly : ini_get($prefix . 'cookie_httponly'))
         ];
 
-        // Set the cookie for the client
+        // Set the cookie for the client, including its SameSite attribute when one is configured
+        $samesite = (string)ini_get($prefix . 'cookie_samesite');
+        if ($samesite !== '' && PHP_VERSION_ID >= 70300) {
+            setcookie(
+                $cookie['name'],
+                $cookie['value'],
+                [
+                    'expires' => $cookie['lifetime'],
+                    'path' => $cookie['path'],
+                    'domain' => $cookie['domain'],
+                    // Browsers reject SameSite=None cookies that are not secure
+                    'secure' => $cookie['secure'] || strcasecmp($samesite, 'None') === 0,
+                    'httponly' => $cookie['httponly'],
+                    'samesite' => $samesite
+                ]
+            );
+            return;
+        }
+
         setcookie(
             $cookie['name'],
             $cookie['value'],
