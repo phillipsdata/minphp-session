@@ -36,7 +36,12 @@ class Session
             // We can only set the options if the session is not active
             if (!$this->hasStarted()) {
                 // Allow the session cookie on cross-site requests (e.g. off-site payment returns) over HTTPS
-                if (PHP_VERSION_ID >= 70300 && $this->isSecureRequest() && !isset($options['cookie_samesite'])) {
+                // unless a SameSite policy was given or already configured in php.ini
+                if (PHP_VERSION_ID >= 70300
+                    && $this->isSecureRequest()
+                    && !isset($options['cookie_samesite'])
+                    && (string)ini_get('session.cookie_samesite') === ''
+                ) {
                     $options += ['cookie_samesite' => 'None', 'cookie_secure' => true];
                 }
 
